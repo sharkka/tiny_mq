@@ -6,6 +6,7 @@
  * @Author   Anyz
  */
 
+#include <sys/time.h>
 #include "tiny_mq.h"
 
 /**
@@ -20,7 +21,7 @@ tiny_mq* tiny_mq::getInstance() {
     if (tmq_ == nullptr) {
         std::lock_guard<std::mutex> lock(instanceMtx_);
         if (tmq_ == nullptr) {
-            tmq_ = new tiny_mq();
+            tmq_ = new tiny_mq;
         }
     }
     return tmq_;
@@ -86,7 +87,7 @@ void tiny_mq::destroyChannel(uint64_t chanId) {
  * @Modify   2018-09-14T16:08:45+0800
  * @Author   Anyz
  */
-void tiny_mq::debugOn(bool b = false) {
+void tiny_mq::debugOn(bool b) {
     debugFlag_ = b;
 }
 /**

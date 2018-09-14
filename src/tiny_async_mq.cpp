@@ -131,7 +131,7 @@ int tiny_async_mq::start() {
                 }
             }
         });
-        que.queueThread = std::move(th);
+        que.queueThread = &th;
         que.queueThread.detach();
     }
     return 0;

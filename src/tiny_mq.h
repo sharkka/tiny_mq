@@ -10,6 +10,7 @@
 
 #include <mutex>
 #include <map>
+#include <thread>
 
 #include "tiny_queue.h"
 #include "Msg.hpp"
@@ -24,18 +25,18 @@ typedef void (*UserCallback)(uint64_t chanId, Msg* userData);
  * @Modify   2018/9/13 18:23:55
  * @Author   Anyz
  */
-typedef struct_tiny_msg {
+typedef struct tiny_msg {
     int           chanId;
     int           userId;
     int           msgId;
     int           status;
-    userCallback  userCallback;
+    UserCallback  userCallback;
 } tiny_msg;
 
-typedef struct_tiny_async_queue {
+typedef struct tiny_async_queue {
     tiny_queue*   tq;
-    userCallback  userCallback;
-    std::thread   queueThread;
+    UserCallback  userCallback;
+    std::thread*  queueThread;
     bool          running;
 } tiny_async_queue;
 
@@ -51,40 +52,41 @@ public:
     using TinyMsgPool  = std::map<uint64_t, tiny_async_queue>;
     using TinyMsg      = Msg;
 public:
-    tiny_mq() = delete;
+    
     tiny_mq(const tiny_mq&) = delete;
     tiny_mq& operator=(const tiny_mq&) = delete;
     virtual ~tiny_mq();
     static tiny_mq*  getInstance();
 
-    virtual int    subscribe(uint64_t chan) = 0;
-    virtual int    subscribe(uint64_t chan, UserCallback userCallback) = 0;
-    virtual int    unsubscribe(uint64_t chan) = 0;
-    virtual int    registerEvent(uint64_t chan, UserCallback userCallback) = 0;
-    virtual int    publish(uint64_t chan) = 0;
-    virtual int    put(TinyMsg&& msg) = 0;
-    virtual std::unique_ptr<Msg> get(uint64_t chan, int millisec = 0) = 0;
+    virtual int    subscribe(uint64_t chan) {return 0;}
+    virtual int    subscribe(uint64_t chan, UserCallback userCallback) {return 0;}
+    virtual int    unsubscribe(uint64_t chan) {return 0;}
+    virtual int    registerEvent(uint64_t chan, UserCallback userCallback) {return 0;}
+    virtual int    publish(uint64_t chan) {return 0;}
+    virtual int    put(TinyMsg&& msg) {return 0;}
+    virtual std::unique_ptr<Msg> get(uint64_t chan, int millisec = 0) {return nullptr;}
 
-    virtual int    start() = 0;
-    virtual int    stop() = 0;
+    virtual int    start() {return 0;}
+    virtual int    stop() {return 0;}
 
     uint64_t       createChannel(int maxMqSize = 64);
-    int            destroyChannel(uint64_t chanId);
+    void           destroyChannel(uint64_t chanId);
     void           setMaxChannels(int maxCh);
     void           setMaxMqSize(uint64_t chanId, int size);
 
-    void           debugOn();
+    void           debugOn(bool b = false);
     void           debugOff();
     void           dumpMqStatus();
-    TinyMsgPool*   poolHandle() const {return &msgPool_;}
+    TinyMsgPool*   poolHandle() {return &msgPool_;}
 
 protected:
     TinyMsgPool    msgPool_;
-    std::mutex     instanceMtx_;
+    static std::mutex     instanceMtx_;
     std::mutex     poolMtx_;
-    static tiny_mq*  tmq_ = nullptr;
+    static tiny_mq*  tmq_;
 
 private:
+    tiny_mq();
     int            generateChannelId();
     bool           debugFlag_   = false;
     int            maxChannels_ = 32;
