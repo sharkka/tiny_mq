@@ -12,6 +12,10 @@
 tiny_async_mq::~tiny_async_mq() {
     
 }
+
+int tiny_async_mq::subscribe(uint64_t chan) {
+    return pushSubscriber(chan, nullptr);
+}
 /**
  * @Method   subscribe
  * @Brief
@@ -24,10 +28,7 @@ tiny_async_mq::~tiny_async_mq() {
  * @return   [description]
  */
 int tiny_async_mq::subscribe(uint64_t chan, UserCallback userCallback) {
-    tiny_msq tm;
-    tm.chan = chan;
-    tm.userCallback = userCallback;
-    return pushSubscriber(&tm, userCallback);
+    return pushSubscriber(chan, userCallback);
 }
 /**
  * @Method   unsubscribe
@@ -77,17 +78,18 @@ int tiny_async_mq::publish(uint64_t chan) {
  * @return   [description]
  */
 int tiny_async_mq::pushSubscriber(uint64_t chan, UserCallback userCallback) {
-    if (tmsg->chanId < 0) {
+    if (chan < 0) {
         printf("channel id invalid.\n");
         return -1;
     }
-    auto chanQueue = msgPool_[tmsg->chanId];
-    if (chanQueue == msgPool_.end()) {
+    auto chanQueue = msgPool_.find(chan);
+    if (chanQueue != msgPool_.end()) {
+        msgPool_[chan].userCallback = userCallback;
+        return 0;
+    } else {
         printf("channel not exist.\n");
         return -1;
     }
-    chanQueue.userCallback = userCallback;
-    return 0;
 }
 /**
  * @Method   popSubscriber
@@ -99,17 +101,18 @@ int tiny_async_mq::pushSubscriber(uint64_t chan, UserCallback userCallback) {
  * @return   [description]
  */
 int tiny_async_mq::popSubscriber(uint64_t chan) {
-    if (tmsg->chanId < 0) {
+    if (chan < 0) {
         printf("channel id invalid.\n");
         return -1;
     }
-    auto chanQueue = msgPool_[tmsg->chanId];
-    if (chanQueue == msgPool_.end()) {
+    auto chanQueue = msgPool_.find(chan);
+    if (chanQueue != msgPool_.end()) {
+        msgPool_[chan].userCallback = nullptr;
+        return 0;
+    } else {
         printf("channel not exist.\n");
         return -1;
     }
-    chanQueue.userCallback = nullptr;
-    return 0;
 }
 /**
  * @Method   start
@@ -122,9 +125,9 @@ int tiny_async_mq::popSubscriber(uint64_t chan) {
 int tiny_async_mq::start() {
     auto pool = this->poolHandle();
     for (auto e : *pool) {
-        std::thread th([this]{
-            auto que = e->second;
-            while (que.running_) {
+        auto que = e.second;
+        std::thread th([&, this]{
+            while (que.running) {
                 auto s = que.tq;
                 if (s) {
                     que.userCallback(s->channelId(), s->get().get());
@@ -132,7 +135,7 @@ int tiny_async_mq::start() {
             }
         });
         que.queueThread = &th;
-        que.queueThread.detach();
+        que.queueThread->detach();
     }
     return 0;
 }
@@ -147,9 +150,9 @@ int tiny_async_mq::start() {
 int tiny_async_mq::stop() {
     auto pool = this->poolHandle();
     for (auto e : *pool) {
-        std::thread th([this]{
-            auto que = e->second;
-            que.running_ = false;
+        auto que = e.second;
+        std::thread th([&, this]{
+            que.running = false;
         });
     }
     return 0;    

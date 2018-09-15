@@ -9,6 +9,8 @@
 #include <sys/time.h>
 #include "tiny_mq.h"
 
+std::mutex tiny_mq::instanceMtx_;
+tiny_mq*   tiny_mq::tmq_        = nullptr;
 /**
  * @Method   getInstance
  * @Brief
@@ -18,9 +20,9 @@
  * @return   [description]
  */
 tiny_mq* tiny_mq::getInstance() {
-    if (tmq_ == nullptr) {
+    if (nullptr == tmq_) {
         std::lock_guard<std::mutex> lock(instanceMtx_);
-        if (tmq_ == nullptr) {
+        if (nullptr == tmq_) {
             tmq_ = new tiny_mq;
         }
     }
@@ -58,7 +60,7 @@ uint64_t tiny_mq::createChannel(int size) {
     tiny_queue tq;
     taq.tq = &tq;
     std::lock_guard<std::mutex> lck(poolMtx_);
-    taq.tq->setChannel(msgPool_.size() + 1);
+    taq.tq->setChannel(generateChannelId());
     taq.tq->setMaxSize(size);
     uint64_t ch = generateChannelId();
     msgPool_.insert(std::pair<uint64_t, tiny_async_queue>(ch, taq));

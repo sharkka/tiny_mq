@@ -23,10 +23,10 @@ tiny_sync_mq::~tiny_sync_mq() {
  * @return   [description]
  */
 int tiny_sync_mq::put(uint64_t chanId, TinyMsg&& msg) {
-    auto e = msgPool_[chanId].tq;
+    auto e = msgPool_.find(chanId);
     if (e == msgPool_.end())
         return -1;
-    e.put(msg);
+    msgPool_[chanId].tq->put(std::move(msg));
     return 0;
 }
 /**
@@ -39,10 +39,10 @@ int tiny_sync_mq::put(uint64_t chanId, TinyMsg&& msg) {
  * @param    msg [description]
  * @return   [description]
  */
-std::unique_ptr<Msg> tiny_sync_mq::get(int chan, int millisec) {
-    auto e = msgPool_[chanId].tq;
+std::unique_ptr<Msg> tiny_sync_mq::get(uint64_t chanId, int millisec) {
+    auto e = msgPool_.find(chanId);
     if (e == msgPool_.end())
         return nullptr;
-    return e.get(msg);
+    return msgPool_[chanId].tq->get(millisec);
 }
 

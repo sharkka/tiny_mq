@@ -23,13 +23,14 @@ public:
     } 
 
     void put(Msg&& msg) {
+	int timeoutMillis = 10;
         {
-            LockGuard lock(queueMutex_);
+            std::unique_lock<std::mutex> lock(queueMutex_);
             if (maxSize_ > 0) {
                 auto queueFullOccured = !queueFullCond_.wait_for(
                     lock,
                     std::chrono::milliseconds(timeoutMillis),
-                    [this]{return queue_.size() < maxSize_;});
+                    [this]{return queue_.size() < static_cast<unsigned int>(maxSize_);});
                 if (queueFullOccured) {
                     printf("WARNING: message queue is full.\n");
                     return;
@@ -66,7 +67,7 @@ public:
         // Construct an ad hoc Queue to handle response Msg
         std::unique_lock<std::mutex> lock(responseMapMutex_);
         auto it = responseMap_.emplace(
-            std::make_pair(msg.getUniqueId(), std::unique_ptr<Queue>(new Queue))).first;
+            std::make_pair(msg.getUniqueId(), std::unique_ptr<tiny_queue>(new tiny_queue))).first;
         lock.unlock();
 
         put(std::move(msg));
@@ -94,7 +95,7 @@ private:
     std::condition_variable queueCond_;
     // Map to keep track of which response handler queues are associated with which request Msgs
     std::condition_variable queueFullCond_;
-    std::map<MsgUID, std::unique_ptr<Queue>> responseMap_;
+    std::map<MsgUID, std::unique_ptr<tiny_queue>> responseMap_;
     // Mutex to protect access to response map
     std::mutex responseMapMutex_;
     uint64_t chanId_ = 0;

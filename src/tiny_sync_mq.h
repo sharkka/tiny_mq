@@ -11,7 +11,8 @@
 #include <mutex>
 #include <map>
 
-#include "Queue.hpp"
+#include "tiny_mq.h"
+#include "tiny_queue.h"
 #include "Msg.hpp"
 
 /**
@@ -21,7 +22,7 @@
  * @Modify   2018/9/13 18:23:55
  * @Author   Anyz
  */
-class tiny_sync_mq {
+class tiny_sync_mq : public tiny_mq {
 public:
     tiny_sync_mq() = delete;
     tiny_sync_mq(const tiny_mq&) = delete;
@@ -30,7 +31,7 @@ public:
     int start() override {return 0;}
     int stop() override {return 0;}
 
-    int    put(TinyMsg&& msg) override;
+    int    put(uint64_t chanId, TinyMsg&& msg) override;
     std::unique_ptr<Msg> get(uint64_t chan, int millisec = 0) override;
 
 };

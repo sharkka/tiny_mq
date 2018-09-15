@@ -3,7 +3,7 @@
 
 #include "Msg.hpp"
 #include <memory>
-
+#include <mutex>
 
 const int MSG_TIMEOUT = -1;
 
@@ -21,8 +21,8 @@ public:
     std::unique_ptr<Msg> request(Msg&& msg);
 
     void      respondTo(MsgUID reqUid, Msg&& responseMsg);
-    void      setChannel(uint64_t ch);
-    void      setMaxSize(int maxSize);
+    void      setChannel(uint64_t ch) { chanId_ = ch; }
+    void      setMaxSize(int maxSize) { maxSize_ = maxSize; }
     uint64_t  channelId() const {return chanId_;}
 
 private:

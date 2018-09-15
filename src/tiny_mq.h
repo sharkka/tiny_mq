@@ -52,7 +52,6 @@ public:
     using TinyMsgPool  = std::map<uint64_t, tiny_async_queue>;
     using TinyMsg      = Msg;
 public:
-    
     tiny_mq(const tiny_mq&) = delete;
     tiny_mq& operator=(const tiny_mq&) = delete;
     virtual ~tiny_mq();
@@ -63,7 +62,7 @@ public:
     virtual int    unsubscribe(uint64_t chan) {return 0;}
     virtual int    registerEvent(uint64_t chan, UserCallback userCallback) {return 0;}
     virtual int    publish(uint64_t chan) {return 0;}
-    virtual int    put(TinyMsg&& msg) {return 0;}
+    virtual int    put(uint64_t chanId, TinyMsg&& msg) {return 0;}
     virtual std::unique_ptr<Msg> get(uint64_t chan, int millisec = 0) {return nullptr;}
 
     virtual int    start() {return 0;}
@@ -86,7 +85,7 @@ protected:
     static tiny_mq*  tmq_;
 
 private:
-    tiny_mq();
+    tiny_mq(){}
     int            generateChannelId();
     bool           debugFlag_   = false;
     int            maxChannels_ = 32;
