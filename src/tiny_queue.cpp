@@ -23,7 +23,7 @@ public:
     } 
 
     void put(Msg&& msg) {
-	int timeoutMillis = 10;
+	int timeoutMillis = 0;
         {
             std::unique_lock<std::mutex> lock(queueMutex_);
             if (maxSize_ > 0) {

@@ -33,7 +33,7 @@ typedef struct tiny_msg {
     UserCallback  userCallback;
 } tiny_msg;
 
-typedef struct tiny_async_queue {
+typedef struct _tiny_async_queue {
     tiny_queue*   tq;
     UserCallback  userCallback;
     std::thread*  queueThread;

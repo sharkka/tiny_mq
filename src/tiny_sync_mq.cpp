@@ -10,7 +10,7 @@
 
 
 tiny_sync_mq::~tiny_sync_mq() {
-    
+    // release and delete tiny_queue  
 }
 
 tiny_mq* tiny_sync_mq::getInstance() {
@@ -33,9 +33,16 @@ tiny_mq* tiny_sync_mq::getInstance() {
  * @return   [description]
  */
 int tiny_sync_mq::put(uint64_t chanId, TinyMsg&& msg) {
+    DataMsg<int>* datamsg = dynamic_cast<DataMsg<int>*>(&msg);
     auto e = msgPool_.find(chanId);
-    if (e == msgPool_.end())
-        return -1;
+    tiny_async_queue taq;
+    tiny_queue* tq = new tiny_queue;
+    taq.tq = tq;
+    if (e == msgPool_.end()) {
+        tq->put(std::move(msg));
+        msgPool_.insert(std::pair<uint64_t, tiny_async_queue>(chanId, taq));
+        return 0;
+    }
     msgPool_[chanId].tq->put(std::move(msg));
     return 0;
 }
@@ -51,8 +58,10 @@ int tiny_sync_mq::put(uint64_t chanId, TinyMsg&& msg) {
  */
 std::unique_ptr<Msg> tiny_sync_mq::get(uint64_t chanId, int millisec) {
     auto e = msgPool_.find(chanId);
-    if (e == msgPool_.end())
+    if (e == msgPool_.end()) {
+        printf("channel %d not found\n", chanId);
         return nullptr;
+    }
     return msgPool_[chanId].tq->get(millisec);
 }
 
