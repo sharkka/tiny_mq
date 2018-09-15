@@ -8,6 +8,15 @@
 
 #include "tiny_async_mq.h"
 
+tiny_mq* tiny_async_mq::getInstance() {
+    if (nullptr == tmq_) {
+        std::lock_guard<std::mutex> lock(instanceMtx_);
+        if (nullptr == tmq_) {
+            tmq_ = new tiny_async_mq;
+        }
+    }
+    return tmq_;
+}
 
 tiny_async_mq::~tiny_async_mq() {
     

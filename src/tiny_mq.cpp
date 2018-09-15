@@ -19,15 +19,15 @@ tiny_mq*   tiny_mq::tmq_        = nullptr;
  * @Author   Anyz
  * @return   [description]
  */
-tiny_mq* tiny_mq::getInstance() {
-    if (nullptr == tmq_) {
-        std::lock_guard<std::mutex> lock(instanceMtx_);
-        if (nullptr == tmq_) {
-            tmq_ = new tiny_mq;
-        }
-    }
-    return tmq_;
-}
+//tiny_mq* tiny_mq::getInstance() {
+//    if (nullptr == tmq_) {
+//        std::lock_guard<std::mutex> lock(instanceMtx_);
+//        if (nullptr == tmq_) {
+//            tmq_ = new tiny_mq;
+//        }
+//    }
+//    return tmq_;
+//}
 
 tiny_mq::~tiny_mq() {
     if (tmq_) {

@@ -19,9 +19,9 @@
  */
 class tiny_async_mq : public tiny_mq {
 public:
-    tiny_async_mq() = delete;
     tiny_async_mq(const tiny_async_mq&) = delete;
     tiny_async_mq& operator=(const tiny_async_mq&) = delete;
+    static tiny_mq* getInstance();
     virtual ~tiny_async_mq();
 
     int    subscribe(uint64_t chan) override;
@@ -35,6 +35,9 @@ public:
 protected:
     int    pushSubscriber(uint64_t chan, UserCallback userCallback);
     int    popSubscriber(uint64_t chan);
+
+private:
+    tiny_async_mq() {}
 };
 
 #endif

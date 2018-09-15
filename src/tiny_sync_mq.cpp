@@ -12,6 +12,16 @@
 tiny_sync_mq::~tiny_sync_mq() {
     
 }
+
+tiny_mq* tiny_sync_mq::getInstance() {
+    if (nullptr == tmq_) {
+        std::lock_guard<std::mutex> lock(instanceMtx_);
+        if (nullptr == tmq_) {
+            tmq_ = new tiny_sync_mq;
+        }
+    }
+    return tmq_;
+}
 /**
  * @Method   put
  * @Brief

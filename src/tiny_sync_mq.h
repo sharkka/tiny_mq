@@ -24,7 +24,6 @@
  */
 class tiny_sync_mq : public tiny_mq {
 public:
-    tiny_sync_mq() = delete;
     tiny_sync_mq(const tiny_mq&) = delete;
     tiny_mq& operator=(const tiny_sync_mq&) = delete;
     virtual ~tiny_sync_mq();
@@ -33,7 +32,10 @@ public:
 
     int    put(uint64_t chanId, TinyMsg&& msg) override;
     std::unique_ptr<Msg> get(uint64_t chan, int millisec = 0) override;
+    static tiny_mq* getInstance();
 
+private:
+    tiny_sync_mq() {}
 };
 
 #endif
