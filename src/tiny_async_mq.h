@@ -28,7 +28,8 @@ public:
     int    subscribe(uint64_t chan, UserCallback userCallback) override;
     int    unsubscribe(uint64_t chan) override;
     int    registerEvent(uint64_t chan, UserCallback userCallback) override;
-    int    publish(uint64_t chan) override;
+    int    publish(tiny_complex_queue* complexQueue) override;
+    int    put(uint64_t chanId, TinyMsg&& msg) override;
     int    start() override;
     int    stop() override;
 

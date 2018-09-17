@@ -56,14 +56,14 @@ void tiny_mq::setMaxChannels(int maxCh) {
  * @param    size [description]
  */
 uint64_t tiny_mq::createChannel(int size) {
-    tiny_async_queue taq;
+    tiny_complex_queue complexQueue;
     tiny_queue tq;
-    taq.tq = &tq;
+    complexQueue.tq = &tq;
     std::lock_guard<std::mutex> lck(poolMtx_);
-    taq.tq->setChannel(generateChannelId());
-    taq.tq->setMaxSize(size);
+    complexQueue.tq->setChannel(generateChannelId());
+    complexQueue.tq->setMaxSize(size);
     uint64_t ch = generateChannelId();
-    msgPool_.insert(std::pair<uint64_t, tiny_async_queue>(ch, taq));
+    msgPool_.insert(std::pair<uint64_t, tiny_complex_queue>(ch, complexQueue));
     return ch;
 }
 /**

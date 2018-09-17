@@ -33,12 +33,13 @@ typedef struct tiny_msg {
     UserCallback  userCallback;
 } tiny_msg;
 
-typedef struct _tiny_async_queue {
+typedef struct _tiny_complex_queue {
     tiny_queue*   tq;
     UserCallback  userCallback;
     std::thread*  queueThread;
     bool          running;
-} tiny_async_queue;
+    std::mutex*    mtx;
+} tiny_complex_queue;
 
 /**
  * @Class    tiny_mq
@@ -49,7 +50,7 @@ typedef struct _tiny_async_queue {
  */
 class tiny_mq {
 public:
-    using TinyMsgPool  = std::map<uint64_t, tiny_async_queue>;
+    using TinyMsgPool  = std::map<uint64_t, tiny_complex_queue>;
     using TinyMsg      = Msg;
 public:
     tiny_mq(){}
@@ -62,7 +63,7 @@ public:
     virtual int    subscribe(uint64_t chan, UserCallback userCallback) {return 0;}
     virtual int    unsubscribe(uint64_t chan) {return 0;}
     virtual int    registerEvent(uint64_t chan, UserCallback userCallback) {return 0;}
-    virtual int    publish(uint64_t chan) {return 0;}
+    virtual int    publish(tiny_complex_queue* complexQueue) {return 0;}
     virtual int    put(uint64_t chanId, TinyMsg&& msg) {return 0;}
     virtual std::unique_ptr<Msg> get(uint64_t chan, int millisec = 0) {return nullptr;}
 
