@@ -44,7 +44,7 @@ int tiny_sync_mq::put(uint64_t chanId, TinyMsg&& msg) {
         msgPool_.insert(std::pair<uint64_t, tiny_complex_queue>(chanId, complexQueue));
         return 0;
     }
-    //std::lock_guard<std::mutex> lck(complexQueue.mtx);
+    std::lock_guard<std::mutex> lck(*complexQueue.mtx);
     msgPool_[chanId].tq->put(std::move(msg));
     return 0;
 }

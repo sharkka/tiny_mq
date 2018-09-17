@@ -31,7 +31,7 @@ public:
     int stop() override {return 0;}
 
     int    put(uint64_t chanId, TinyMsg&& msg) override;
-    std::unique_ptr<Msg> get(uint64_t chan, int millisec = 0) override;
+    std::unique_ptr<Msg> get(uint64_t chanId, int millisec = 0) override;
     static tiny_mq* getInstance();
 
 private:

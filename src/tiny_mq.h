@@ -57,13 +57,13 @@ public:
     virtual ~tiny_mq();
     //static tiny_mq*  getInstance();
 
-    virtual int    subscribe(uint64_t chan) {return 0;}
-    virtual int    subscribe(uint64_t chan, UserCallback userCallback) {return 0;}
-    virtual int    unsubscribe(uint64_t chan) {return 0;}
-    virtual int    registerEvent(uint64_t chan, UserCallback userCallback) {return 0;}
+    virtual int    subscribe(uint64_t chanId) {return 0;}
+    virtual int    subscribe(uint64_t chanId, UserCallback userCallback) {return 0;}
+    virtual int    unsubscribe(uint64_t chanId) {return 0;}
+    virtual int    registerEvent(uint64_t chanId, UserCallback userCallback) {return 0;}
     virtual int    publish(tiny_complex_queue* complexQueue) {return 0;}
     virtual int    put(uint64_t chanId, TinyMsg&& msg) {return 0;}
-    virtual std::unique_ptr<Msg> get(uint64_t chan, int millisec = 0) {return nullptr;}
+    virtual std::unique_ptr<Msg> get(uint64_t chanId, int millisec = 0) {return nullptr;}
 
     virtual int    start() {return 0;}
     virtual int    stop() {return 0;}
