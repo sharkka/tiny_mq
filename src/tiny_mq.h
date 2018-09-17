@@ -15,8 +15,6 @@
 #include "tiny_queue.h"
 #include "Msg.hpp"
 
-//#define __ST static
-
 typedef void (*UserCallback)(uint64_t chanId, Msg* userData);
 /**
  * @Struct   tiny_msg
@@ -69,6 +67,7 @@ public:
 
     virtual int    start() {return 0;}
     virtual int    stop() {return 0;}
+    virtual void   clean() {}
 
     uint64_t       createChannel(int maxMqSize = 64);
     void           destroyChannel(uint64_t chanId);
@@ -79,17 +78,31 @@ public:
     void           debugOff();
     void           dumpMqStatus();
     TinyMsgPool*   poolHandle() {return &msgPool_;}
-
+    
+    class GarbageCollector {
+    public:
+        ~GarbageCollector() {
+            if (tmq_) {
+                delete tmq_;
+                tmq_ = nullptr;
+            }
+        }
+        static GarbageCollector garbageCollector;
+    };
 protected:
     TinyMsgPool    msgPool_;
     static std::mutex     instanceMtx_;
     std::mutex     poolMtx_;
     static tiny_mq*  tmq_;
+    
 
 private:
     int            generateChannelId();
     bool           debugFlag_   = false;
     int            maxChannels_ = 32;
+
 };
+
+#define AutoRelease() tiny_mq::GarbageCollector garbageCollector
 
 #endif

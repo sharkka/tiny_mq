@@ -32,6 +32,8 @@ public:
     int    put(uint64_t chanId, TinyMsg&& msg) override;
     int    start() override;
     int    stop() override;
+    void   clean();
+    static void   destroy();
 
 protected:
     int    pushSubscriber(uint64_t chan, UserCallback userCallback);

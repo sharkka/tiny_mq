@@ -30,10 +30,6 @@ tiny_mq*   tiny_mq::tmq_        = nullptr;
 //}
 
 tiny_mq::~tiny_mq() {
-    if (tmq_) {
-        delete tmq_;
-        tmq_ = nullptr;
-    }
 }
 /**
  * @Method   setMaxChannels

@@ -21,9 +21,44 @@ tiny_mq* tiny_async_mq::getInstance() {
 }
 
 tiny_async_mq::~tiny_async_mq() {
-    
+    destroy();
 }
-
+/**
+ * @Method   destroy
+ * @Brief
+ * @DateTime 2018-09-17T14:45:07+0800
+ * @Modify   2018-09-17T14:45:07+0800
+ * @Author   Anyz
+ */
+void tiny_async_mq::destroy() {
+    auto i = getInstance();
+    i->stop();
+    i->clean();
+}
+/**
+ * @Method   clean
+ * @Brief
+ * @DateTime 2018-09-17T14:34:37+0800
+ * @Modify   2018-09-17T14:34:37+0800
+ * @Author   Anyz
+ */
+void tiny_async_mq::clean() {
+    for (auto& e : msgPool_) {
+        auto& que = e.second;
+        this->popSubscriber(que.tq->channelId());
+    }
+    msgPool_.clear();
+    printf("message queue pool has been clean up.\n");
+}
+/**
+ * @Method   subscribe
+ * @Brief
+ * @DateTime 2018-09-17T14:34:34+0800
+ * @Modify   2018-09-17T14:34:34+0800
+ * @Author   Anyz
+ * @param    chan [description]
+ * @return   [description]
+ */
 int tiny_async_mq::subscribe(uint64_t chan) {
     return pushSubscriber(chan, nullptr);
 }
@@ -39,7 +74,6 @@ int tiny_async_mq::subscribe(uint64_t chan) {
  * @return   [description]
  */
 int tiny_async_mq::subscribe(uint64_t chan, UserCallback userCallback) {
-    printf("cccccccc - %p\n", userCallback);
     return pushSubscriber(chan, userCallback);
 }
 /**
@@ -79,7 +113,6 @@ int tiny_async_mq::registerEvent(uint64_t chan, UserCallback userCallback) {
 int tiny_async_mq::publish(tiny_complex_queue* complexQueue) {
     auto upmsg = complexQueue->tq->get();
     auto msg = upmsg.get();
-    printf("tq ptr: %p, callback ptr: %p, ch: %ld\n", complexQueue->tq, complexQueue->userCallback, complexQueue->tq->channelId());
     complexQueue->userCallback(complexQueue->tq->channelId(), msg);
     return 0;
 }
@@ -96,11 +129,12 @@ int tiny_async_mq::publish(tiny_complex_queue* complexQueue) {
 int tiny_async_mq::put(uint64_t chanId, TinyMsg&& msg) {
     auto e = msgPool_.find(chanId);
     tiny_complex_queue complexQueue;
-    tiny_queue* tq = new tiny_queue;
+    tiny_queue* tq = nullptr;
     std::mutex mtx;
     complexQueue.tq = tq;
     complexQueue.mtx = &mtx;
     if (e == msgPool_.end()) {
+        tq = new tiny_queue;
         tq->put(std::move(msg));
         msgPool_.insert(std::pair<uint64_t, tiny_complex_queue>(chanId, complexQueue));
         return 0;
@@ -126,19 +160,16 @@ int tiny_async_mq::pushSubscriber(uint64_t chan, UserCallback userCallback) {
     }
     tiny_complex_queue complexQueue;
     auto chanQueue = msgPool_.find(chan);
-    if (chanQueue != msgPool_.end()) {
-        msgPool_[chan].userCallback = userCallback;
-        return 0;
+    if (chanQueue != msgPool_.end()) {   
     } else {
         printf("create new channel %ld.\n", chan);
-
         tiny_queue* tq = new tiny_queue;
         tq->setChannel(chan);
         complexQueue.tq = tq;
         msgPool_.insert(std::pair<uint64_t, tiny_complex_queue>(chan, complexQueue));
-        msgPool_[chan].userCallback = userCallback;
-        return 0;
     }
+    msgPool_[chan].userCallback = userCallback;
+    return 0;
 }
 /**
  * @Method   popSubscriber
@@ -157,6 +188,10 @@ int tiny_async_mq::popSubscriber(uint64_t chan) {
     auto chanQueue = msgPool_.find(chan);
     if (chanQueue != msgPool_.end()) {
         msgPool_[chan].userCallback = nullptr;
+        if (msgPool_[chan].tq) {
+            delete msgPool_[chan].tq;
+            msgPool_[chan].tq = nullptr;
+        }
         return 0;
     } else {
         printf("channel not exist.\n");
@@ -181,8 +216,8 @@ int tiny_async_mq::start() {
                 auto s = que.tq;
                 if (s) {
                     publish(&que);
-                    printf("ssssss\n");
-                    usleep(20000);
+                } else {
+                    usleep(200000);
                 }
             }
         });
@@ -201,12 +236,15 @@ int tiny_async_mq::start() {
  */
 int tiny_async_mq::stop() {
     auto pool = this->poolHandle();
-    for (auto e : *pool) {
-        auto que = e.second;
-        std::thread th([&, this]{
-            que.running = false;
-        });
+    for (auto& e : *pool) {
+        auto& que = e.second;
+        que.running = false;
+        if (que.queueThread) {
+            delete que.queueThread;
+            que.queueThread = nullptr;
+        }
     }
+    printf("publish thread stoped.\n");
     return 0;    
 }
 
