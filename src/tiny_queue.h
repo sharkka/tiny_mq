@@ -1,7 +1,7 @@
 #ifndef __TINY_QUEUE_H_
 #define __TINY_QUEUE_H_
 
-#include "Msg.hpp"
+#include "tiny_message.h"
 #include <memory>
 #include <mutex>
 
@@ -16,18 +16,21 @@ public:
     explicit tiny_queue(uint64_t ch, int maxSize = -1);
     ~tiny_queue();
 
-    void put(Msg&& msg);
-    std::unique_ptr<Msg> get(int timeoutMillis = 0);
-    std::unique_ptr<Msg> request(Msg&& msg);
+    void put(tiny_message&& msg);
+    void put(tiny_message& msg);
+    void put(tiny_message* msg);
+    std::shared_ptr<tiny_message> get(int timeoutMillis = 0);
+    std::shared_ptr<tiny_message> request(tiny_message&& msg);
 
-    void      respondTo(MsgUID reqUid, Msg&& responseMsg);
+    void      respondTo(MsgUID reqUid, tiny_message&& responseMsg);
     void      setChannel(uint64_t ch) { chanId_ = ch; }
     void      setMaxSize(int maxSize) { maxSize_ = maxSize; }
     uint64_t  channelId() const {return chanId_;}
+    size_t    size() const;
 
 private:
     class Impl;
-    std::unique_ptr<Impl> impl_;
+    std::shared_ptr<Impl> impl_;
     uint64_t chanId_;
     int maxSize_;
 };

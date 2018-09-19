@@ -8,6 +8,7 @@
 
 #include <sys/time.h>
 #include "tiny_mq.h"
+#include <memory.h>
 
 std::mutex tiny_mq::instanceMtx_;
 tiny_mq*   tiny_mq::tmq_        = nullptr;
@@ -53,6 +54,7 @@ void tiny_mq::setMaxChannels(int maxCh) {
  */
 uint64_t tiny_mq::createChannel(int size) {
     tiny_complex_queue complexQueue;
+    memset(&complexQueue, 0, sizeof(tiny_complex_queue));
     tiny_queue tq;
     complexQueue.tq = &tq;
     std::lock_guard<std::mutex> lck(poolMtx_);

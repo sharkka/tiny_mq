@@ -9,6 +9,7 @@
 #include "tiny_async_mq.h"
 #include <sys/time.h>
 #include <unistd.h>
+#include <memory.h>
 
 tiny_mq* tiny_async_mq::getInstance() {
     if (nullptr == tmq_) {
@@ -113,7 +114,8 @@ int tiny_async_mq::registerEvent(uint64_t chanId, UserCallback userCallback) {
 int tiny_async_mq::publish(tiny_complex_queue* complexQueue) {
     auto upmsg = complexQueue->tq->get();
     auto msg = upmsg.get();
-    complexQueue->userCallback(complexQueue->tq->channelId(), msg);
+    for (auto& v : complexQueue->userCallbacks)
+        v(complexQueue->tq->channelId(), msg);
     return 0;
 }
 /**
@@ -129,6 +131,7 @@ int tiny_async_mq::publish(tiny_complex_queue* complexQueue) {
 int tiny_async_mq::put(uint64_t chanId, TinyMsg&& msg) {
     auto e = msgPool_.find(chanId);
     tiny_complex_queue complexQueue;
+    memset(&complexQueue, 0, sizeof(tiny_complex_queue));
     tiny_queue* tq = nullptr;
     std::mutex mtx;
     complexQueue.tq = tq;
@@ -141,6 +144,70 @@ int tiny_async_mq::put(uint64_t chanId, TinyMsg&& msg) {
     }
     std::lock_guard<std::mutex> lck(*complexQueue.mtx);
     msgPool_[chanId].tq->put(std::move(msg));
+    return 0;
+}
+/**
+ * @Method   put
+ * @Brief
+ * @DateTime 2018-09-17T15:51:55+0800
+ * @Modify   2018-09-17T15:51:55+0800
+ * @Author   Anyz
+ * @param    chanId [description]
+ * @param    msg [description]
+ * @return   [description]
+ */
+int tiny_async_mq::put(uint64_t chanId, TinyMsg& msg) {
+    auto e = msgPool_.find(chanId);
+    tiny_complex_queue complexQueue;
+    memset(&complexQueue, 0, sizeof(tiny_complex_queue));
+    tiny_queue* tq = nullptr;
+    std::mutex mtx;
+    complexQueue.tq = tq;
+    complexQueue.mtx = &mtx;
+    if (e == msgPool_.end()) {
+        tq = new tiny_queue;
+        tq->put(std::move(msg));
+        msgPool_.insert(std::pair<uint64_t, tiny_complex_queue>(chanId, complexQueue));
+        return 0;
+    }
+    std::lock_guard<std::mutex> lck(*complexQueue.mtx);
+    msg.setRef(complexQueue.userCallbacks.size());
+    msgPool_[chanId].tq->put(std::move(msg));
+    return 0;
+}
+/**
+ * @Method   {{tag}}
+ * @Brief
+ * @DateTime 2018-09-19T11:41:28+0800
+ * @Modify   2018-09-19T11:41:28+0800
+ * @Author   Anyz
+ * @param    chanId [description]
+ * @param    msg [description]
+ * @return   [description]
+ */
+int tiny_async_mq::put(uint64_t chanId, tiny_message* msg) {
+    auto e = msgPool_.find(chanId);
+    if (e == msgPool_.end()) {
+        printf("channel %ld not found, msg would not put into queue.\n", chanId);
+        return -1;
+    }
+    tiny_complex_queue complexQueue;
+    memset(&complexQueue, 0, sizeof(tiny_complex_queue));
+    tiny_queue* tq = nullptr;
+    std::mutex mtx;
+    complexQueue.tq = tq;
+    complexQueue.mtx = &mtx;
+    if (e == msgPool_.end()) {
+        tq = new tiny_queue;
+        std::lock_guard<std::mutex> lck(*complexQueue.mtx);
+        msg->setRef(1);
+        tq->put(msg);
+        msgPool_.insert(std::pair<uint64_t, tiny_complex_queue>(chanId, complexQueue));
+        return 0;
+    }
+    std::lock_guard<std::mutex> lck(*complexQueue.mtx);
+    msg->setRef(msgPool_[chanId].userCallbacks.size());
+    msgPool_[chanId].tq->put(msg);
     return 0;
 }
 /**
@@ -159,6 +226,7 @@ int tiny_async_mq::pushSubscriber(uint64_t chanId, UserCallback userCallback) {
         return -1;
     }
     tiny_complex_queue complexQueue;
+    memset(&complexQueue, 0, sizeof(tiny_complex_queue));
     auto chanQueue = msgPool_.find(chanId);
     if (chanQueue != msgPool_.end()) {   
     } else {
@@ -168,7 +236,8 @@ int tiny_async_mq::pushSubscriber(uint64_t chanId, UserCallback userCallback) {
         complexQueue.tq = tq;
         msgPool_.insert(std::pair<uint64_t, tiny_complex_queue>(chanId, complexQueue));
     }
-    msgPool_[chanId].userCallback = userCallback;
+    //msgPool_[chanId].userCallback = userCallback;
+    msgPool_[chanId].userCallbacks.push_back(userCallback);
     return 0;
 }
 /**
@@ -187,7 +256,8 @@ int tiny_async_mq::popSubscriber(uint64_t chanId) {
     }
     auto chanQueue = msgPool_.find(chanId);
     if (chanQueue != msgPool_.end()) {
-        msgPool_[chanId].userCallback = nullptr;
+        for (auto& v : msgPool_[chanId].userCallbacks)
+            v = nullptr;
         if (msgPool_[chanId].tq) {
             delete msgPool_[chanId].tq;
             msgPool_[chanId].tq = nullptr;
@@ -216,8 +286,10 @@ int tiny_async_mq::start() {
                 auto s = que.tq;
                 if (s) {
                     publish(&que);
+                    //usleep(1000000);
                 } else {
                     usleep(200000);
+                    printf("tiny queue is null\n");
                 }
             }
         });

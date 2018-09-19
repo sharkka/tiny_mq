@@ -7,7 +7,7 @@
  */
 
 #include "tiny_sync_mq.h"
-
+#include <memory.h>
 
 tiny_sync_mq::~tiny_sync_mq() {
     // release and delete tiny_queue  
@@ -35,6 +35,7 @@ tiny_mq* tiny_sync_mq::getInstance() {
 int tiny_sync_mq::put(uint64_t chanId, TinyMsg&& msg) {
     auto e = msgPool_.find(chanId);
     tiny_complex_queue complexQueue;
+    memset(&complexQueue, 0, sizeof(tiny_complex_queue));
     tiny_queue* tq = new tiny_queue;
     std::mutex mtx;
     complexQueue.tq = tq;
@@ -58,7 +59,7 @@ int tiny_sync_mq::put(uint64_t chanId, TinyMsg&& msg) {
  * @param    msg [description]
  * @return   [description]
  */
-std::unique_ptr<Msg> tiny_sync_mq::get(uint64_t chanId, int millisec) {
+std::shared_ptr<tiny_message> tiny_sync_mq::get(uint64_t chanId, int millisec) {
     auto e = msgPool_.find(chanId);
     if (e == msgPool_.end()) {
         printf("channel %ld not found\n", chanId);

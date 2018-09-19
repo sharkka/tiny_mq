@@ -24,7 +24,7 @@ static void test_sync() {
     }
     for (int i = 0; i < 10; ++i) {
         auto p = tmq->get(2);
-        Msg* msg = p.get();
+        tiny_message* msg = p.get();
         DataMsg<int>* dm = dynamic_cast<DataMsg<int>*>(msg);
         if (msg) {
             printf("ch: %ld, msg payload : %d\n", ch, dm->getPayload());
@@ -42,7 +42,7 @@ static void test_sync() {
  * @param    chanId [description]
  * @param    userData [description]
  */
-static void OnMessage1(uint64_t chanId, Msg* userData) {
+static void OnMessage1(uint64_t chanId, tiny_message* userData) {
     DataMsg<int>* dm = dynamic_cast<DataMsg<int>*>(userData);
     printf("1 Asynchronize callback channel: %ld, msg payload : %d\n", chanId, dm->getPayload());
 }
@@ -55,9 +55,22 @@ static void OnMessage1(uint64_t chanId, Msg* userData) {
  * @param    chanId [description]
  * @param    userData [description]
  */
-static void OnMessage2(uint64_t chanId, Msg* userData) {
+static void OnMessage2(uint64_t chanId, tiny_message* userData) {
     DataMsg<int>* dm = dynamic_cast<DataMsg<int>*>(userData);
     printf("2 Asynchronize callback channel: %ld, msg payload : %d\n", chanId, dm->getPayload());
+}
+/**
+ * @Method   OnMessage3
+ * @Brief
+ * @DateTime 2018-09-19T15:19:08+0800
+ * @Modify   2018-09-19T15:19:08+0800
+ * @Author   Anyz
+ * @param    chanId [description]
+ * @param    userData [description]
+ */
+static void OnMessage3(uint64_t chanId, tiny_message* userData) {
+    DataMsg<int>* dm = dynamic_cast<DataMsg<int>*>(userData);
+    printf("3 Asynchronize callback channel: %ld, msg payload : %d\n", chanId, dm->getPayload());
 }
 /**
  * @Method   test_async
@@ -68,20 +81,27 @@ static void OnMessage2(uint64_t chanId, Msg* userData) {
  * @Author   Anyz
  */
 static void test_async() {
-    AutoRelease();
+    // step 1 declaration of auto memory garbage collector
+    AutoCollector();
+    // step 2 get instance
     tiny_mq* tmq = tiny_async_mq::getInstance();
     tiny_mq* tmqCheck = tiny_async_mq::getInstance();
     printf("%p == %p\n", tmq, tmqCheck);
 
-    uint64_t ch = 9;
-    tmq->subscribe(ch, OnMessage1);
-    tmq->subscribe(ch+1, OnMessage2);
+    // step 3 subscribe one special channel
+    uint64_t ch1 = 9;
+    uint64_t ch2 = 10;
+    tmq->subscribe(ch1, OnMessage1);
+    tmq->subscribe(ch1, OnMessage2);
+    tmq->subscribe(ch2, OnMessage3);
+    // step 4
     tmq->start();
-
+    // step 5 any user put, and subscriber will get message from callback
+    //DataMsg<int>* msg;
     std::thread th1([&] {
         for (int i = 0; i < 100; ++i) {
-            DataMsg<int> msg(ch, (i+1) * 7);
-            tmq->put(ch, std::move(msg));
+            DataMsg<int>*msg = new DataMsg<int>(ch1, (i+1)*7);
+            tmq->put(ch1, msg);
             printf("1 put msg payload : %d\n", i);
             usleep(10000);
         }
@@ -89,15 +109,15 @@ static void test_async() {
 
     std::thread th2([&] {
         for (int i = 0; i < 100; ++i) {
-            DataMsg<int> msg(ch+1, (i+1) * 2);
-            tmq->put(ch+1, std::move(msg));
+            DataMsg<int>* msg = new DataMsg<int>(ch2, (i+1) * 2);
+            tmq->put(ch2, msg);
             printf("2 put msg payload : %d\n", i);
             usleep(20000);
         }
     });
 
-    th1.join();
     th2.join();
+    th1.join();
 }
 /**
  * @Method   main

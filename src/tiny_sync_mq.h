@@ -13,7 +13,7 @@
 
 #include "tiny_mq.h"
 #include "tiny_queue.h"
-#include "Msg.hpp"
+#include "tiny_message.h"
 
 /**
  * @Class    tiny_sync_mq
@@ -31,7 +31,7 @@ public:
     int stop() override {return 0;}
 
     int    put(uint64_t chanId, TinyMsg&& msg) override;
-    std::unique_ptr<Msg> get(uint64_t chanId, int millisec = 0) override;
+    std::shared_ptr<tiny_message> get(uint64_t chanId, int millisec = 0) override;
     static tiny_mq* getInstance();
 
 private:

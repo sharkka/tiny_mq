@@ -10,12 +10,13 @@
 
 #include <mutex>
 #include <map>
+#include <vector>
 #include <thread>
 
 #include "tiny_queue.h"
-#include "Msg.hpp"
+#include "tiny_message.h"
 
-typedef void (*UserCallback)(uint64_t chanId, Msg* userData);
+typedef void (*UserCallback)(uint64_t chanId, tiny_message* userData);
 /**
  * @Struct   tiny_msg
  * @Brief
@@ -30,13 +31,19 @@ typedef struct tiny_msg {
     int           status;
     UserCallback  userCallback;
 } tiny_msg;
-
+/**
+ * @Struct   tiny_complex_queue
+ * @Brief
+ * @DateTime 2018/9/17 15:59:54
+ * @Modify   2018/9/17 16:00:02
+ * @Author   Anyz
+ */
 typedef struct _tiny_complex_queue {
-    tiny_queue*   tq;
-    UserCallback  userCallback;
-    std::thread*  queueThread;
     bool          running;
-    std::mutex*    mtx;
+    std::thread*  queueThread = nullptr;
+    tiny_queue*   tq = nullptr;
+    std::mutex*   mtx = nullptr;
+    std::vector<UserCallback>  userCallbacks;
 } tiny_complex_queue;
 
 /**
@@ -49,7 +56,7 @@ typedef struct _tiny_complex_queue {
 class tiny_mq {
 public:
     using TinyMsgPool  = std::map<uint64_t, tiny_complex_queue>;
-    using TinyMsg      = Msg;
+    using TinyMsg      = tiny_message;
 public:
     tiny_mq(){}
     tiny_mq(const tiny_mq&) = delete;
@@ -63,7 +70,9 @@ public:
     virtual int    registerEvent(uint64_t chanId, UserCallback userCallback) {return 0;}
     virtual int    publish(tiny_complex_queue* complexQueue) {return 0;}
     virtual int    put(uint64_t chanId, TinyMsg&& msg) {return 0;}
-    virtual std::unique_ptr<Msg> get(uint64_t chanId, int millisec = 0) {return nullptr;}
+    virtual int    put(uint64_t chanId, TinyMsg& msg) {return 0;}
+    virtual int    put(uint64_t chanId, TinyMsg* msg) {return 0;}
+    virtual std::shared_ptr<TinyMsg> get(uint64_t chanId, int millisec = 0) {return nullptr;}
 
     virtual int    start() {return 0;}
     virtual int    stop() {return 0;}
@@ -103,6 +112,6 @@ private:
 
 };
 
-#define AutoRelease() tiny_mq::GarbageCollector garbageCollector
+#define AutoCollector() tiny_mq::GarbageCollector garbageCollector
 
 #endif
