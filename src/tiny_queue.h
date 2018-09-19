@@ -1,3 +1,10 @@
+/**
+ * @File     tiny_queue.cpp
+ * @Brief
+ * @DateTime 2018-09-13T18:22:31+0800
+ * @Modify   2018-09-13T18:22:31+0800
+ * @Author   Anyz
+ */
 #ifndef __TINY_QUEUE_H_
 #define __TINY_QUEUE_H_
 
@@ -7,7 +14,13 @@
 
 const int MSG_TIMEOUT = -1;
 
-
+/**
+ * @Class    tiny_queue
+ * @Brief
+ * @DateTime 2018/9/13 18:23:50
+ * @Modify   2018/9/13 18:23:55
+ * @Author   Anyz
+ */
 class tiny_queue {
 public:
     using LockGuard = std::lock_guard<std::mutex>;
@@ -36,4 +49,3 @@ private:
 };
 
 #endif
-

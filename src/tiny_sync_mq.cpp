@@ -12,7 +12,16 @@
 tiny_sync_mq::~tiny_sync_mq() {
     // release and delete tiny_queue  
 }
-
+/**
+ * @Method   getInstance
+ * @Brief
+ * @DateTime 2018-09-14T18:32:11+0800
+ * @Modify   2018-09-14T18:32:11+0800
+ * @Author   Anyz
+ * @param    chanId [description]
+ * @param    msg [description]
+ * @return   [description]
+ */
 tiny_mq* tiny_sync_mq::getInstance() {
     if (nullptr == tmq_) {
         std::lock_guard<std::mutex> lock(instanceMtx_);

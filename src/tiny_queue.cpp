@@ -55,7 +55,7 @@ public:
                     return;
                 }
             }
-            queue_.push(std::shared_ptr<tiny_message>(&msg));
+            queue_.push(std::shared_ptr<tiny_message>(msg));
         }
         queueCond_.notify_one();
     }
@@ -79,27 +79,6 @@ public:
         }
         queueCond_.notify_one();
     }
-
-    /*std::unique_ptr<tiny_message> get(int timeoutMillis) {
-        std::unique_lock<std::mutex> lock(queueMutex_);
-
-        if (timeoutMillis <= 0)
-            queueCond_.wait(lock, [this]{return !queue_.empty();});
-        else {
-            // wait_for returns false if the return is due to timeout
-            auto timeoutOccured = !queueCond_.wait_for(
-                lock,
-                std::chrono::milliseconds(timeoutMillis),
-                [this]{return !queue_.empty();});
-
-            if (timeoutOccured)
-                queue_.emplace(new tiny_message(MSG_TIMEOUT));
-        }
-        auto msg = queue_.front()->move();
-        queue_.pop();
-        queueFullCond_.notify_one();
-        return msg;
-    }*/
 
     std::shared_ptr<tiny_message> get(int timeoutMillis) {
         std::unique_lock<std::mutex> lock(queueMutex_);

@@ -12,23 +12,6 @@
 
 std::mutex tiny_mq::instanceMtx_;
 tiny_mq*   tiny_mq::tmq_        = nullptr;
-/**
- * @Method   getInstance
- * @Brief
- * @DateTime 2018-09-14T14:26:17+0800
- * @Modify   2018-09-14T14:26:17+0800
- * @Author   Anyz
- * @return   [description]
- */
-//tiny_mq* tiny_mq::getInstance() {
-//    if (nullptr == tmq_) {
-//        std::lock_guard<std::mutex> lock(instanceMtx_);
-//        if (nullptr == tmq_) {
-//            tmq_ = new tiny_mq;
-//        }
-//    }
-//    return tmq_;
-//}
 
 tiny_mq::~tiny_mq() {
 }

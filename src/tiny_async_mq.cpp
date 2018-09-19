@@ -5,7 +5,6 @@
  * @Modify   2018-09-13T18:22:31+0800
  * @Author   Anyz
  */
-
 #include "tiny_async_mq.h"
 #include <sys/time.h>
 #include <unistd.h>
@@ -114,8 +113,8 @@ int tiny_async_mq::registerEvent(uint64_t chanId, UserCallback userCallback) {
 int tiny_async_mq::publish(tiny_complex_queue* complexQueue) {
     auto upmsg = complexQueue->tq->get();
     auto msg = upmsg.get();
-    for (auto& v : complexQueue->userCallbacks)
-        v(complexQueue->tq->channelId(), msg);
+    for (auto& cb : complexQueue->userCallbacks)
+        cb(complexQueue->tq->channelId(), msg);
     return 0;
 }
 /**
@@ -194,7 +193,6 @@ int tiny_async_mq::pushSubscriber(uint64_t chanId, UserCallback userCallback) {
         complexQueue.tq = tq;
         msgPool_.insert(std::pair<uint64_t, tiny_complex_queue>(chanId, complexQueue));
     }
-    //msgPool_[chanId].userCallback = userCallback;
     msgPool_[chanId].userCallbacks.push_back(userCallback);
     return 0;
 }
@@ -277,4 +275,3 @@ int tiny_async_mq::stop() {
     printf("publish thread stoped.\n");
     return 0;    
 }
-
