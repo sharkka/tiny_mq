@@ -70,7 +70,7 @@ public:
     virtual int    registerEvent(uint64_t chanId, UserCallback userCallback) {return 0;}
     virtual int    publish(tiny_complex_queue* complexQueue) {return 0;}
     virtual int    put(uint64_t chanId, TinyMsg&& msg) {return 0;}
-    virtual int    put(uint64_t chanId, TinyMsg& msg) {return 0;}
+    //virtual int    put(uint64_t chanId, TinyMsg& msg) {return 0;}
     virtual int    put(uint64_t chanId, TinyMsg* msg) {return 0;}
     virtual std::shared_ptr<TinyMsg> get(uint64_t chanId, int millisec = 0) {return nullptr;}
 

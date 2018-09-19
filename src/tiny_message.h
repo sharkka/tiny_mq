@@ -45,8 +45,7 @@ public:
     template <typename ... Args>
     DataMsg(int msgId, Args&& ... args)
       : tiny_message(msgId),
-        pl_(new PayloadType(std::forward<Args>(args) ...))
-    {
+        pl_(new PayloadType(std::forward<Args>(args) ...)) {
     }
 
     virtual ~DataMsg() = default;
@@ -59,6 +58,14 @@ public:
         tiny_message::operator=(dataMsg);
         this->clone(dataMsg);
         return *this;
+    }
+    static DataMsg* newDataMsg(int chanId, PayloadType& payload) {
+        DataMsg<PayloadType>* msgData = new DataMsg<PayloadType>(chanId, payload);
+        return msgData;
+    }
+    static DataMsg* newDataMsg(int chanId, PayloadType&& payload) {
+        DataMsg<PayloadType>* msgData = new DataMsg<PayloadType>(chanId, payload);
+        return msgData;
     }
 
     virtual std::unique_ptr<tiny_message> move() override {

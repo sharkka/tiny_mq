@@ -4,6 +4,13 @@
 
 #include <sys/time.h>
 #include <unistd.h>
+#include <string>
+
+typedef struct _user_msg_t {
+    int id;
+    double r;
+    std::string name;
+} user_msg_t;
 
 /**
  * @Method   test_sync
@@ -44,7 +51,10 @@ static void test_sync() {
  */
 static void OnMessage1(uint64_t chanId, tiny_message* userData) {
     DataMsg<int>* dm = dynamic_cast<DataMsg<int>*>(userData);
-    printf("1 Asynchronize callback channel: %ld, msg payload : %d\n", chanId, dm->getPayload());
+    printf("1 Asynchronize callback channel: %ld, msg id: %lld, payload : %d\n",
+        chanId,
+        dm->getUniqueId(),
+        dm->getPayload());
 }
 /**
  * @Method   OnMessage2
@@ -57,7 +67,10 @@ static void OnMessage1(uint64_t chanId, tiny_message* userData) {
  */
 static void OnMessage2(uint64_t chanId, tiny_message* userData) {
     DataMsg<int>* dm = dynamic_cast<DataMsg<int>*>(userData);
-    printf("2 Asynchronize callback channel: %ld, msg payload : %d\n", chanId, dm->getPayload());
+    printf("2 Asynchronize callback channel: %ld, msg id: %lld, payload : %d\n",
+        chanId,
+        dm->getUniqueId(),
+        dm->getPayload());
 }
 /**
  * @Method   OnMessage3
@@ -69,8 +82,11 @@ static void OnMessage2(uint64_t chanId, tiny_message* userData) {
  * @param    userData [description]
  */
 static void OnMessage3(uint64_t chanId, tiny_message* userData) {
-    DataMsg<int>* dm = dynamic_cast<DataMsg<int>*>(userData);
-    printf("3 Asynchronize callback channel: %ld, msg payload : %d\n", chanId, dm->getPayload());
+    DataMsg<user_msg_t>* dm = dynamic_cast<DataMsg<user_msg_t>*>(userData);
+    printf("3 Asynchronize callback channel: %ld, msg id: %lld, payload :(%d, %2.2f, %s)\n",
+        chanId,
+        dm->getUniqueId(),
+        dm->getPayload().id, dm->getPayload().r, dm->getPayload().name.c_str());
 }
 /**
  * @Method   test_async
@@ -100,7 +116,8 @@ static void test_async() {
     //DataMsg<int>* msg;
     std::thread th1([&] {
         for (int i = 0; i < 100; ++i) {
-            DataMsg<int>*msg = new DataMsg<int>(ch1, (i+1)*7);
+            //DataMsg<int>* msg = new DataMsg<int>(ch1, (i+1)*7);
+            DataMsg<int>* msg = DataMsg<int>::newDataMsg(ch1, (i+1) * 7);
             tmq->put(ch1, msg);
             printf("1 put msg payload : %d\n", i);
             usleep(10000);
@@ -109,7 +126,12 @@ static void test_async() {
 
     std::thread th2([&] {
         for (int i = 0; i < 100; ++i) {
-            DataMsg<int>* msg = new DataMsg<int>(ch2, (i+1) * 2);
+            user_msg_t umsg;
+            umsg.id = 25;
+            umsg.name = "qsor";
+            umsg.r = 5.29 * i;
+            DataMsg<user_msg_t>* msg = DataMsg<user_msg_t>::newDataMsg(ch2, umsg);
+            //DataMsg<int> msg(ch2, (i+1)*2);
             tmq->put(ch2, msg);
             printf("2 put msg payload : %d\n", i);
             usleep(20000);

@@ -129,52 +129,10 @@ int tiny_async_mq::publish(tiny_complex_queue* complexQueue) {
  * @return   [description]
  */
 int tiny_async_mq::put(uint64_t chanId, TinyMsg&& msg) {
-    auto e = msgPool_.find(chanId);
-    tiny_complex_queue complexQueue;
-    memset(&complexQueue, 0, sizeof(tiny_complex_queue));
-    tiny_queue* tq = nullptr;
-    std::mutex mtx;
-    complexQueue.tq = tq;
-    complexQueue.mtx = &mtx;
-    if (e == msgPool_.end()) {
-        tq = new tiny_queue;
-        tq->put(std::move(msg));
-        msgPool_.insert(std::pair<uint64_t, tiny_complex_queue>(chanId, complexQueue));
-        return 0;
-    }
-    std::lock_guard<std::mutex> lck(*complexQueue.mtx);
-    msgPool_[chanId].tq->put(std::move(msg));
+    printf("NOT IMPLEMENT\n");
     return 0;
 }
-/**
- * @Method   put
- * @Brief
- * @DateTime 2018-09-17T15:51:55+0800
- * @Modify   2018-09-17T15:51:55+0800
- * @Author   Anyz
- * @param    chanId [description]
- * @param    msg [description]
- * @return   [description]
- */
-int tiny_async_mq::put(uint64_t chanId, TinyMsg& msg) {
-    auto e = msgPool_.find(chanId);
-    tiny_complex_queue complexQueue;
-    memset(&complexQueue, 0, sizeof(tiny_complex_queue));
-    tiny_queue* tq = nullptr;
-    std::mutex mtx;
-    complexQueue.tq = tq;
-    complexQueue.mtx = &mtx;
-    if (e == msgPool_.end()) {
-        tq = new tiny_queue;
-        tq->put(std::move(msg));
-        msgPool_.insert(std::pair<uint64_t, tiny_complex_queue>(chanId, complexQueue));
-        return 0;
-    }
-    std::lock_guard<std::mutex> lck(*complexQueue.mtx);
-    msg.setRef(complexQueue.userCallbacks.size());
-    msgPool_[chanId].tq->put(std::move(msg));
-    return 0;
-}
+
 /**
  * @Method   {{tag}}
  * @Brief
@@ -188,7 +146,7 @@ int tiny_async_mq::put(uint64_t chanId, TinyMsg& msg) {
 int tiny_async_mq::put(uint64_t chanId, tiny_message* msg) {
     auto e = msgPool_.find(chanId);
     if (e == msgPool_.end()) {
-        printf("channel %ld not found, msg would not put into queue.\n", chanId);
+        printf("channel %ld not found, message would not put into queue.\n", chanId);
         return -1;
     }
     tiny_complex_queue complexQueue;

@@ -55,7 +55,7 @@ public:
                     return;
                 }
             }
-            queue_.push(msg.move());
+            queue_.push(std::shared_ptr<tiny_message>(&msg));
         }
         queueCond_.notify_one();
     }
@@ -174,6 +174,11 @@ tiny_queue::~tiny_queue() {}
 void tiny_queue::put(tiny_message&& msg) {
     impl_->put(std::move(msg));
 }
+
+void tiny_queue::put(tiny_message& msg) {
+    impl_->put(msg);
+}
+
 void tiny_queue::put(tiny_message* msg) {
     impl_->put(msg);
 }

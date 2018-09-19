@@ -30,7 +30,6 @@ public:
     int    registerEvent(uint64_t chanId, UserCallback userCallback) override;
     int    publish(tiny_complex_queue* complexQueue) override;
     int    put(uint64_t chanId, TinyMsg&& msg) override;
-    int    put(uint64_t chanId, TinyMsg& msg) override;
     int    put(uint64_t chanId, tiny_message* msg) override;
     int    start() override;
     int    stop() override;
