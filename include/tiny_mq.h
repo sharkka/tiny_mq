@@ -34,20 +34,6 @@
 
 typedef void (*UserCallback)(int chanId, tiny_message* userData);
 /**
- * @Struct   tiny_msg
- * @Brief
- * @DateTime 2018/9/13 18:23:50
- * @Modify   2018/9/13 18:23:55
- * @Author   Anyz
- */
-typedef struct tiny_msg {
-    int           chanId;
-    int           userId;
-    int           msgId;
-    int           status;
-    UserCallback  userCallback;
-} tiny_msg;
-/**
  * @Struct   tiny_complex_queue
  * @Brief
  * @DateTime 2018/9/17 15:59:54
