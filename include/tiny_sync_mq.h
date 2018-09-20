@@ -30,8 +30,8 @@ public:
     int start() override {return 0;}
     int stop() override {return 0;}
 
-    int    put(uint64_t chanId, TinyMsg&& msg) override;
-    std::shared_ptr<tiny_message> get(uint64_t chanId, int millisec = 0) override;
+    int    put(int chanId, TinyMsg&& msg) override;
+    std::shared_ptr<tiny_message> get(int chanId, int millisec = 0) override;
     static tiny_mq* getInstance();
 
 private:

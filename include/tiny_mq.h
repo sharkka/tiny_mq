@@ -16,7 +16,7 @@
 #include "tiny_queue.h"
 #include "tiny_message.h"
 
-typedef void (*UserCallback)(uint64_t chanId, tiny_message* userData);
+typedef void (*UserCallback)(int chanId, tiny_message* userData);
 /**
  * @Struct   tiny_msg
  * @Brief
@@ -55,7 +55,7 @@ typedef struct _tiny_complex_queue {
  */
 class tiny_mq {
 public:
-    using TinyMsgPool  = std::map<uint64_t, tiny_complex_queue>;
+    using TinyMsgPool  = std::map<int, tiny_complex_queue>;
     using TinyMsg      = tiny_message;
 public:
     tiny_mq(){}
@@ -63,27 +63,23 @@ public:
     tiny_mq& operator=(const tiny_mq&) = delete;
     virtual ~tiny_mq();
 
-    virtual int    subscribe(uint64_t chanId) {return 0;}
-    virtual int    subscribe(uint64_t chanId, UserCallback userCallback) {return 0;}
-    virtual int    unsubscribe(uint64_t chanId) {return 0;}
-    virtual int    registerEvent(uint64_t chanId, UserCallback userCallback) {return 0;}
+    virtual int    subscribe(int chanId) {return 0;}
+    virtual int    subscribe(int chanId, UserCallback userCallback) {return 0;}
+    virtual int    unsubscribe(int chanId) {return 0;}
+    virtual int    registerEvent(int chanId, UserCallback userCallback) {return 0;}
     virtual int    publish(tiny_complex_queue* complexQueue) {return 0;}
-    virtual int    put(uint64_t chanId, TinyMsg&& msg) {return 0;}
-    virtual int    put(uint64_t chanId, TinyMsg* msg) {return 0;}
-    virtual std::shared_ptr<TinyMsg> get(uint64_t chanId, int millisec = 0) {return nullptr;}
+    virtual int    put(int chanId, TinyMsg&& msg) {return 0;}
+    virtual int    put(int chanId, TinyMsg* msg) {return 0;}
+    virtual std::shared_ptr<TinyMsg> get(int chanId, int millisec = 0) {return nullptr;}
 
     virtual int    start() {return 0;}
     virtual int    stop() {return 0;}
     virtual void   clean() {}
 
-    uint64_t       createChannel(int maxMqSize = 64);
-    void           destroyChannel(uint64_t chanId);
+    int            createChannel(int maxMqSize = 64);
+    void           destroyChannel(int chanId);
     void           setMaxChannels(int maxCh);
-    void           setMaxMqSize(uint64_t chanId, int size);
-
-    void           debugOn(bool b = false);
-    void           debugOff();
-    void           dumpMqStatus();
+    void           setMaxMqSize(int chanId, int size);
     TinyMsgPool*   poolHandle() {return &msgPool_;}
     
     class GarbageCollector {
@@ -104,7 +100,6 @@ protected:
     
 
 private:
-    int            generateChannelId();
     bool           debugFlag_   = false;
     int            maxChannels_ = 32;
 

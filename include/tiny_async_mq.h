@@ -24,21 +24,21 @@ public:
     static tiny_mq* getInstance();
     virtual ~tiny_async_mq();
 
-    int    subscribe(uint64_t chanId) override;
-    int    subscribe(uint64_t chanId, UserCallback userCallback) override;
-    int    unsubscribe(uint64_t chanId) override;
-    int    registerEvent(uint64_t chanId, UserCallback userCallback) override;
+    int    subscribe(int chanId) override;
+    int    subscribe(int chanId, UserCallback userCallback) override;
+    int    unsubscribe(int chanId) override;
+    int    registerEvent(int chanId, UserCallback userCallback) override;
     int    publish(tiny_complex_queue* complexQueue) override;
-    int    put(uint64_t chanId, TinyMsg&& msg) override;
-    int    put(uint64_t chanId, tiny_message* msg) override;
+    int    put(int chanId, TinyMsg&& msg) override;
+    int    put(int chanId, tiny_message* msg) override;
     int    start() override;
     int    stop() override;
     void   clean();
     static void   destroy();
 
 protected:
-    int    pushSubscriber(uint64_t chanId, UserCallback userCallback);
-    int    popSubscriber(uint64_t chanId);
+    int    pushSubscriber(int chanId, UserCallback userCallback);
+    int    popSubscriber(int chanId);
 
 private:
     tiny_async_mq() {}

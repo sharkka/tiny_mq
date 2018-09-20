@@ -11,14 +11,8 @@ using MsgUID = unsigned long long;
 class tiny_message {
 public:
     tiny_message(int msgId);
-
     virtual ~tiny_message() = default;
-    tiny_message(const tiny_message& msg) {this->clone(msg);}
-    tiny_message& operator=(const tiny_message& msg) {return this->clone(msg);}
-
     virtual std::unique_ptr<tiny_message> move();
-    virtual std::shared_ptr<tiny_message> copy();
-    virtual tiny_message& clone(const tiny_message& msg);
 
     int getMsgId() const;
     MsgUID getUniqueId() const;
@@ -49,16 +43,8 @@ public:
     }
 
     virtual ~DataMsg() = default;
-    DataMsg(const DataMsg& dataMsg) : tiny_message(dataMsg) {
-        this->clone(dataMsg);
-    }
-    DataMsg& operator=(const DataMsg& dataMsg) {
-        if (this == &dataMsg)
-            return *this;
-        tiny_message::operator=(dataMsg);
-        this->clone(dataMsg);
-        return *this;
-    }
+    DataMsg(const DataMsg& dataMsg)=delete;
+    DataMsg& operator=(const DataMsg& dataMsg)=delete;
     static DataMsg* newDataMsg(int chanId, PayloadType& payload) {
         DataMsg<PayloadType>* msgData = new DataMsg<PayloadType>(chanId, payload);
         return msgData;
@@ -70,16 +56,6 @@ public:
 
     virtual std::unique_ptr<tiny_message> move() override {
         return std::unique_ptr<tiny_message>(new DataMsg<PayloadType>(std::move(*this)));
-    }
-    std::shared_ptr<tiny_message> copy() override {
-        std::shared_ptr<tiny_message> smsg(new DataMsg<PayloadType>(*this));
-        return smsg;
-    }
-    DataMsg& clone(const DataMsg& dataMsg) {
-        this->msgId_ = dataMsg.getMsgId();
-        this->uniqueId_ = dataMsg.getUniqueId();
-        this->pl_ = std::shared_ptr<PayloadType>(new PayloadType(dataMsg.getPayload()));
-        return *this;
     }
 
     PayloadType& getPayload() const {
