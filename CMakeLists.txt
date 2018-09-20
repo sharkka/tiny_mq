@@ -32,6 +32,7 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--default-symver -Wno-unused-function -Wl,--no-undefined,-z,relro,-z,now,-z,noexecstack -fstack-protector")
 endif()
 
+include_directories(${PROJECT_SOURCE_DIR}/include)
 aux_source_directory(${PROJECT_SOURCE_DIR}/src DIR_SRCS)
 
 add_executable(tmqtest ${DIR_SRCS})

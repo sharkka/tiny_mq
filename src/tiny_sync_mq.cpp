@@ -41,7 +41,7 @@ tiny_mq* tiny_sync_mq::getInstance() {
  * @param    msg [description]
  * @return   [description]
  */
-int tiny_sync_mq::put(uint64_t chanId, TinyMsg&& msg) {
+int tiny_sync_mq::put(int chanId, TinyMsg&& msg) {
     auto e = msgPool_.find(chanId);
     tiny_complex_queue complexQueue;
     memset(&complexQueue, 0, sizeof(tiny_complex_queue));
@@ -51,7 +51,7 @@ int tiny_sync_mq::put(uint64_t chanId, TinyMsg&& msg) {
     complexQueue.mtx = &mtx;
     if (e == msgPool_.end()) {
         tq->put(std::move(msg));
-        msgPool_.insert(std::pair<uint64_t, tiny_complex_queue>(chanId, complexQueue));
+        msgPool_.insert(std::pair<int, tiny_complex_queue>(chanId, complexQueue));
         return 0;
     }
     std::lock_guard<std::mutex> lck(*complexQueue.mtx);
@@ -68,10 +68,10 @@ int tiny_sync_mq::put(uint64_t chanId, TinyMsg&& msg) {
  * @param    msg [description]
  * @return   [description]
  */
-std::shared_ptr<tiny_message> tiny_sync_mq::get(uint64_t chanId, int millisec) {
+std::shared_ptr<tiny_message> tiny_sync_mq::get(int chanId, int millisec) {
     auto e = msgPool_.find(chanId);
     if (e == msgPool_.end()) {
-        printf("channel %ld not found\n", chanId);
+        printf("channel %d not found\n", chanId);
         return nullptr;
     }
     return msgPool_[chanId].tq->get(millisec);

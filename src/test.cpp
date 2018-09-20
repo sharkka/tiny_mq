@@ -23,7 +23,7 @@ static void test_sync() {
     tiny_mq* tmq = tiny_sync_mq::getInstance(); 
 
     DataMsg<int> pdata(2, 100);
-    uint64_t ch = 2;
+    int ch = 2;
 
     for (int i = 0; i < 10; ++i) {
         DataMsg<int> msg(ch, i * 6);
@@ -34,7 +34,7 @@ static void test_sync() {
         tiny_message* msg = p.get();
         DataMsg<int>* dm = dynamic_cast<DataMsg<int>*>(msg);
         if (msg) {
-            printf("ch: %ld, msg payload : %d\n", ch, dm->getPayload());
+            printf("ch: %d, msg payload : %d\n", ch, dm->getPayload());
         } else {
             printf("not found\n");
         }
@@ -49,9 +49,9 @@ static void test_sync() {
  * @param    chanId [description]
  * @param    userData [description]
  */
-static void OnMessage1(uint64_t chanId, tiny_message* userData) {
+static void OnMessage1(int chanId, tiny_message* userData) {
     DataMsg<int>* dm = dynamic_cast<DataMsg<int>*>(userData);
-    printf("1 Asynchronize callback channel: %ld, msg id: %lld, payload : %d\n",
+    printf("1 Asynchronize callback channel: %d, msg id: %lld, payload : %d\n",
         chanId,
         dm->getUniqueId(),
         dm->getPayload());
@@ -65,9 +65,9 @@ static void OnMessage1(uint64_t chanId, tiny_message* userData) {
  * @param    chanId [description]
  * @param    userData [description]
  */
-static void OnMessage2(uint64_t chanId, tiny_message* userData) {
+static void OnMessage2(int chanId, tiny_message* userData) {
     DataMsg<int>* dm = dynamic_cast<DataMsg<int>*>(userData);
-    printf("2 Asynchronize callback channel: %ld, msg id: %lld, payload : %d\n",
+    printf("2 Asynchronize callback channel: %d, msg id: %lld, payload : %d\n",
         chanId,
         dm->getUniqueId(),
         dm->getPayload());
@@ -81,9 +81,9 @@ static void OnMessage2(uint64_t chanId, tiny_message* userData) {
  * @param    chanId [description]
  * @param    userData [description]
  */
-static void OnMessage3(uint64_t chanId, tiny_message* userData) {
+static void OnMessage3(int chanId, tiny_message* userData) {
     DataMsg<user_msg_t>* dm = dynamic_cast<DataMsg<user_msg_t>*>(userData);
-    printf("3 Asynchronize callback channel: %ld, msg id: %lld, payload :(%d, %2.2f, %s)\n",
+    printf("3 Asynchronize callback channel: %d, msg id: %lld, payload :(%d, %2.2f, %s)\n",
         chanId,
         dm->getUniqueId(),
         dm->getPayload().id, dm->getPayload().r, dm->getPayload().name.c_str());
@@ -105,8 +105,8 @@ static void test_async() {
     printf("%p == %p\n", tmq, tmqCheck);
 
     // step 3 subscribe one special channel
-    uint64_t ch1 = 9;
-    uint64_t ch2 = 10;
+    int ch1 = 9;
+    int ch2 = 10;
     tmq->subscribe(ch1, OnMessage1);
     tmq->subscribe(ch1, OnMessage2);
     tmq->subscribe(ch2, OnMessage3);
@@ -114,8 +114,9 @@ static void test_async() {
     tmq->start();
     // step 5 any user put, and subscriber will get message from callback
     //DataMsg<int>* msg;
+    int N = 100000;
     std::thread th1([&] {
-        for (int i = 0; i < 100; ++i) {
+        for (int i = 0; i < N; ++i) {
             //DataMsg<int>* msg = new DataMsg<int>(ch1, (i+1)*7);
             DataMsg<int>* msg = DataMsg<int>::newDataMsg(ch1, (i+1) * 7);
             tmq->put(ch1, msg);
@@ -125,10 +126,10 @@ static void test_async() {
     });
 
     std::thread th2([&] {
-        for (int i = 0; i < 100; ++i) {
+        for (int i = 0; i < N; ++i) {
             user_msg_t umsg;
             umsg.id = 25;
-            umsg.name = "qsor";
+            umsg.name = "Darge";
             umsg.r = 5.29 * i;
             DataMsg<user_msg_t>* msg = DataMsg<user_msg_t>::newDataMsg(ch2, umsg);
             //DataMsg<int> msg(ch2, (i+1)*2);

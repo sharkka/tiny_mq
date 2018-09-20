@@ -16,17 +16,6 @@ std::unique_ptr<tiny_message> tiny_message::move() {
     return std::unique_ptr<tiny_message>(new tiny_message(std::move(*this)));
 }
 
-std::shared_ptr<tiny_message> tiny_message::copy() {
-    return std::shared_ptr<tiny_message>(new tiny_message(msgId_));
-}
-
-tiny_message& tiny_message::clone(const tiny_message& msg) {
-    this->msgId_ = msg.getMsgId();
-    this->uniqueId_ = msg.getUniqueId();
-    //
-    return *this;
-}
-
 int tiny_message::getMsgId() const {
     return msgId_;
 }

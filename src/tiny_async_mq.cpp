@@ -59,7 +59,7 @@ void tiny_async_mq::clean() {
  * @param    chanId [description]
  * @return   [description]
  */
-int tiny_async_mq::subscribe(uint64_t chanId) {
+int tiny_async_mq::subscribe(int chanId) {
     return pushSubscriber(chanId, nullptr);
 }
 /**
@@ -73,7 +73,7 @@ int tiny_async_mq::subscribe(uint64_t chanId) {
  * @param    userCallback [description]
  * @return   [description]
  */
-int tiny_async_mq::subscribe(uint64_t chanId, UserCallback userCallback) {
+int tiny_async_mq::subscribe(int chanId, UserCallback userCallback) {
     return pushSubscriber(chanId, userCallback);
 }
 /**
@@ -85,7 +85,7 @@ int tiny_async_mq::subscribe(uint64_t chanId, UserCallback userCallback) {
  * @param    chanId [description]
  * @return   [description]
  */
-int tiny_async_mq::unsubscribe(uint64_t chanId) {
+int tiny_async_mq::unsubscribe(int chanId) {
     return popSubscriber(chanId);
 }
 /**
@@ -98,7 +98,7 @@ int tiny_async_mq::unsubscribe(uint64_t chanId) {
  * @param    userCallback [description]
  * @return   [description]
  */
-int tiny_async_mq::registerEvent(uint64_t chanId, UserCallback userCallback) {
+int tiny_async_mq::registerEvent(int chanId, UserCallback userCallback) {
     return 0;
 }
 /**
@@ -127,7 +127,7 @@ int tiny_async_mq::publish(tiny_complex_queue* complexQueue) {
  * @param    msg [description]
  * @return   [description]
  */
-int tiny_async_mq::put(uint64_t chanId, TinyMsg&& msg) {
+int tiny_async_mq::put(int chanId, TinyMsg&& msg) {
     printf("NOT IMPLEMENT\n");
     return 0;
 }
@@ -142,10 +142,10 @@ int tiny_async_mq::put(uint64_t chanId, TinyMsg&& msg) {
  * @param    msg [description]
  * @return   [description]
  */
-int tiny_async_mq::put(uint64_t chanId, tiny_message* msg) {
+int tiny_async_mq::put(int chanId, tiny_message* msg) {
     auto e = msgPool_.find(chanId);
     if (e == msgPool_.end()) {
-        printf("channel %ld not found, message would not put into queue.\n", chanId);
+        printf("channel %d not found, message would not put into queue.\n", chanId);
         return -1;
     }
     tiny_complex_queue complexQueue;
@@ -159,7 +159,7 @@ int tiny_async_mq::put(uint64_t chanId, tiny_message* msg) {
         std::lock_guard<std::mutex> lck(*complexQueue.mtx);
         msg->setRef(1);
         tq->put(msg);
-        msgPool_.insert(std::pair<uint64_t, tiny_complex_queue>(chanId, complexQueue));
+        msgPool_.insert(std::pair<int, tiny_complex_queue>(chanId, complexQueue));
         return 0;
     }
     std::lock_guard<std::mutex> lck(*complexQueue.mtx);
@@ -177,7 +177,7 @@ int tiny_async_mq::put(uint64_t chanId, tiny_message* msg) {
  * @param    userCallback [description]
  * @return   [description]
  */
-int tiny_async_mq::pushSubscriber(uint64_t chanId, UserCallback userCallback) {
+int tiny_async_mq::pushSubscriber(int chanId, UserCallback userCallback) {
     if (chanId < 0) {
         printf("channel id invalid.\n");
         return -1;
@@ -187,11 +187,11 @@ int tiny_async_mq::pushSubscriber(uint64_t chanId, UserCallback userCallback) {
     auto chanQueue = msgPool_.find(chanId);
     if (chanQueue != msgPool_.end()) {   
     } else {
-        printf("create new channel %ld.\n", chanId);
+        printf("create new channel %d.\n", chanId);
         tiny_queue* tq = new tiny_queue;
         tq->setChannel(chanId);
         complexQueue.tq = tq;
-        msgPool_.insert(std::pair<uint64_t, tiny_complex_queue>(chanId, complexQueue));
+        msgPool_.insert(std::pair<int, tiny_complex_queue>(chanId, complexQueue));
     }
     msgPool_[chanId].userCallbacks.push_back(userCallback);
     return 0;
@@ -205,7 +205,7 @@ int tiny_async_mq::pushSubscriber(uint64_t chanId, UserCallback userCallback) {
  * @param    tmsg [description]
  * @return   [description]
  */
-int tiny_async_mq::popSubscriber(uint64_t chanId) {
+int tiny_async_mq::popSubscriber(int chanId) {
     if (chanId < 0) {
         printf("channel id invalid.\n");
         return -1;

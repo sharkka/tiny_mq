@@ -12,7 +12,7 @@ public:
     Impl()
       : queue_(), queueMutex_(), queueCond_(), responseMap_(), responseMapMutex_() {
     }
-    explicit Impl(uint64_t ch, int maxSize)
+    explicit Impl(int ch, int maxSize)
     : queue_(),
       queueMutex_(),
       queueCond_(),
@@ -37,25 +37,6 @@ public:
                 }
             }
             queue_.push(msg.move());
-        }
-        queueCond_.notify_one();
-    }
-
-    void put(tiny_message& msg) {
-    int timeoutMillis = 0;
-        {
-            std::unique_lock<std::mutex> lock(queueMutex_);
-            if (maxSize_ > 0) {
-                auto queueFullOccured = !queueFullCond_.wait_for(
-                    lock,
-                    std::chrono::milliseconds(timeoutMillis),
-                    [this]{return queue_.size() < static_cast<unsigned int>(maxSize_);});
-                if (queueFullOccured) {
-                    printf("WARNING: message queue is full.\n");
-                    return;
-                }
-            }
-            queue_.push(std::shared_ptr<tiny_message>(msg));
         }
         queueCond_.notify_one();
     }
@@ -140,22 +121,18 @@ private:
     std::map<MsgUID, std::shared_ptr<tiny_queue>> responseMap_;
     // Mutex to protect access to response map
     std::mutex responseMapMutex_;
-    uint64_t chanId_ = 0;
+    int chanId_ = 0;
     int maxSize_ = -1;
 };
 
 tiny_queue::tiny_queue() : impl_(new Impl) {}
 
-tiny_queue::tiny_queue(uint64_t ch, int maxSize) : impl_(new Impl(ch, maxSize)) {}
+tiny_queue::tiny_queue(int ch, int maxSize) : impl_(new Impl(ch, maxSize)) {}
 
 tiny_queue::~tiny_queue() {}
 
 void tiny_queue::put(tiny_message&& msg) {
     impl_->put(std::move(msg));
-}
-
-void tiny_queue::put(tiny_message& msg) {
-    impl_->put(msg);
 }
 
 void tiny_queue::put(tiny_message* msg) {
